@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import asyncio
-from dotenv import load_dotenv
 import os
 from tools.get_crypto_price import get_crypto_price
 from agentscope.agent import ReActAgent, UserAgent
@@ -9,30 +8,22 @@ from agentscope.formatter import DashScopeChatFormatter
 from agentscope.memory import InMemoryMemory
 from agentscope.model import OpenAIChatModel
 from agentscope.tool import (
-    Toolkit
+    Toolkit,
+    execute_shell_command,
+    execute_python_code,
+    view_text_file,
 )
 
-load_dotenv()
-
-class AgentCreator(BaseModel):
-    name: str
-    prompt: str
-    tools: list
-    knowledge: list
-    msg: str
-        
-agent_json=FastAPI()
-@agent_json.post("/agents")
-
-async def get_agent(agent: AgentCreator):
+async def main() -> None:
     """first prototipe"""
     toolkit = Toolkit()
     
     toolkit.register_tool_function(get_crypto_price)
+    toolkit.register_tool_function(execute_shell_command)
+    toolkit.register_tool_function(execute_python_code)
+    toolkit.register_tool_function(view_text_file)
     
-    msg = agent.msg
-    
-    cryptopeper = ReActAgent(
+    agent = ReActAgent(
         name = "CryptoPeper",
         sys_prompt = """You are a cryptocurrency assistant. Follow these rules strictly:
         [TASK 1] - Analyze user intent:
@@ -54,7 +45,13 @@ async def get_agent(agent: AgentCreator):
         toolkit=toolkit
     )
     
-    response = await cryptopeper(msg)
-    
-    return response
+    user = UserAgent("User")
 
+    msg = None
+    while True:
+        msg = await user(msg)
+        if msg.get_text_content() == "exit":
+            break
+        msg = await agent(msg)
+        
+asyncio.run(main())
