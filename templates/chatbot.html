@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgentBuilder</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -25,11 +26,12 @@
             border-radius: 24px;
             display: flex;
             overflow: hidden;
-            box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+            box-shadow: 0 16px 40px rgba(39, 39, 39, 0.27);
         }
 
         /* ── Sidebar ── */
         #sidebar {
+            transition: width 0.3s ease, padding 0.3s ease;
             width: 260px;
             background: #f9f9fb;
             border-right: 1px solid #ebebf0;
@@ -220,11 +222,13 @@
             border: 1.5px solid #e8e8f0;
             padding: 10px 14px;
             transition: border-color 0.2s;
+            box-shadow: 0 10px 16px rgba(0, 0, 0, 0.16);
         }
 
         #user_message:focus-within {
             border-color: #5b5fc7;
             background: white;
+            box-shadow: 0 10px 16px rgba(0,0,0,0.16);
         }
 
         #settings-btn {
@@ -244,6 +248,8 @@
         #input_message { flex: 1; }
 
         #user_write {
+            max-height: 120px;
+            overflow-y: auto;
             width: 100%;
             background: transparent;
             border: none;
@@ -252,9 +258,13 @@
             font-size: 0.92rem;
             color: #222;
             resize: none;
-            height: 24px;
+            height: auto;
+            min-height: 24px;
             line-height: 1.5;
         }
+        #user_write::-webkit-scrollbar { width: 4px; }
+        #user_write::-webkit-scrollbar-track { background: transparent; }
+        #user_write::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
 
         #user_write::placeholder { color: #bbb; }
 
@@ -274,15 +284,31 @@
         #send-btn:hover { background: #4a4eb8; transform: scale(1.05); }
         #send-btn:active { transform: scale(0.95); }
         #hamburger {
-            display: none;
             background: transparent;
             border: none;
             font-size: 1.4rem;
             cursor: pointer;
             color: #111;
         }
+
         #sidebar.open { left: 0; }
             #app { position: relative; overflow: hidden; }
+
+        #sidebar.closed { width: 0; padding: 0; overflow: hidden; }
+
+        #sidebar-close { display: none; }
+        @media (max-width: 768px) {
+            #sidebar-close { display: block; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; }
+        }
+
+        #sidebar-toggle {
+            display: block;
+            background: transparent;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: #111;
+        }
         @keyframes blink {
             0%    { opacity: 1; }
             50%   { opacity: 0; }
@@ -292,6 +318,7 @@
         .msg-user {
             align-self: flex-end;
             background: #5b5fc7;
+            white-space: pre-wrap;
             color: white;
             padding: 10px 16px;
             border-radius: 18px 18px 4px 18px;
@@ -305,6 +332,43 @@
             border-radius: 18px 18px 18px 4px;
             max-width: 70%;
         }
+        .msg-agent ul { padding-left: 20px; list-style: disc; }
+        .msg-agent h3 { font-weight: 600; margin: 8px 0 4px; }
+        .msg-agent p { margin: 4px 0; }
+        .msg-agent { line-height: 1.6; }
+        .msg-agent h1, .msg-agent h2, .msg-agent h3 { 
+            font-size: 1rem; 
+            font-weight: 800; 
+            margin: 12px 0 6px; 
+        }
+        .msg-agent p { margin: 6px 0; }
+        .msg-agent ul, .msg-agent ol { 
+            padding-left: 20px; 
+            margin: 6px 0; 
+        }
+        .msg-agent li { margin: 3px 0; }
+        .msg-agent code {
+            background: #1e1e2e;
+            color: #cdd6f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-family: monospace;
+        }
+        .msg-agent pre {
+            background: #0d1117;
+            padding: 12px 16px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+        .msg-agent pre code { 
+            background: transparent;
+            padding: 0;
+        }
+        .msg-agent pre::-webkit-scrollbar { height: 4px; }
+        .msg-agent pre::-webkit-scrollbar-track { background: transparent; }
+        .msg-agent pre::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
         @media (max-width: 768px) {
             #hamburger { display: block; }
             #sidebar { 
@@ -314,13 +378,19 @@
                 z-index: 100;
                 transition: left 0.3s ease;
             }
+            #messages { padding: 16px; }
+            .msg-agent, .msg-user { max-width: 90%; }
+            #input-bar { padding: 12px 16px; }
         }
     </style>
 </head>
 <body>
 <div id="app">
     <div id="sidebar">
-        <div id="sidebar-title">AgentBuilder</div>
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div id="sidebar-title">AgentBuilder</div>
+            <button id="sidebar-close" onclick="toggleSidebar()">✕</button>
+        </div>
         <button id="new-chat-btn">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             New chat
@@ -380,7 +450,8 @@
 
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="../static/js/agent.js"></script>
 </body>
 </html>

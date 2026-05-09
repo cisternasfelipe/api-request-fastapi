@@ -6,16 +6,40 @@ let agentConfig = {
 };
 let interactions = [];
 
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar")
+    if (window.innerWidth <= 768) {
+        sidebar.classList.toggle("open")
+    } else {
+        sidebar.classList.toggle("closed")    
+    }
+};
+
 function handleKey(event) {
-    if (event.key === "Enter") {sendAgent()}
+    const textarea = document.getElementById("user_write")
+    textarea.style.height = "auto"
+    textarea.style.height = textarea.scrollHeight + "px"
+    if (event.shiftKey && event.key === "Enter") {
+        document.getElementById("user_write").value += "\n"
+    } else if (event.key === "Enter") {sendAgent()}
     return
 };
 
 function renderMessage(role, text) {
     const element = document.createElement("div")
     element.className = "msg-" + role
-    element.textContent = text
-    document.getElementById("messages").appendChild(element)
+
+    if (role === "agent") {
+        element.innerHTML = marked.parse(text)
+        element.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block))
+    } else {
+        element.textContent = text
+    }
+
+    const messages = document.getElementById("messages")
+    messages.appendChild(element)
+    messages.scrollTop = messages.scrollHeight
+
 };
 
 // function that return body of agent_json api for endpoint /agents 
@@ -36,11 +60,14 @@ function sendAgent() {
     };
 
     renderMessage("user", user_prompt)
+    document.getElementById("user_write").value = ""
 
     const waiting_response = document.createElement("div")
     waiting_response.textContent = "..."
     waiting_response.className = "msg-agent loading"
-    document.getElementById("messages").appendChild(waiting_response) 
+    document.getElementById("messages").appendChild(waiting_response)
+    const messages = document.getElementById("messages")
+    messages.scrollTop = messages.scrollHeight 
 
     fetch("http://127.0.0.1:8000/agents", {
         method: "POST",
