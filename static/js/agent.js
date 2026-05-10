@@ -15,6 +15,17 @@ function toggleSidebar() {
     }
 };
 
+function toggleSystemPrompt() {
+    const panel = document.getElementById("system-prompt-panel")
+    const messages = document.getElementById("messages")
+    panel.classList.toggle("visible")
+    if (panel.classList.contains("visible")) {
+        messages.style.paddingBottom = "300px"
+    } else {
+        messages.style.paddingBottom = "180px"
+    }
+}
+
 function handleKey(event) {
     const textarea = document.getElementById("user_write")
     textarea.style.height = "auto"
@@ -51,6 +62,7 @@ function sendAgent() {
         return
     };
 
+    agentConfig.prompt = document.getElementById("system_prompt").value
     const body = {
         name: agentConfig.name,
         prompt: agentConfig.prompt,
@@ -68,6 +80,7 @@ function sendAgent() {
     document.getElementById("messages").appendChild(waiting_response)
     const messages = document.getElementById("messages")
     messages.scrollTop = messages.scrollHeight 
+    console.log(body)
 
     fetch("http://127.0.0.1:8000/agents", {
         method: "POST",
