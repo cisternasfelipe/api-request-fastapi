@@ -1,10 +1,11 @@
 class Agent():
-    def __init__(self, name:str, sys_prompt:dict, tools:list, knowledge:list, context_summarize:list):
+    def __init__(self, name:str, sys_prompt:dict, tools:dict, knowledge:list, context_summarize:list, msg:str):
         self.name = name
         self.sys_prompt = sys_prompt
         self.tools = tools
         self.knowledge = knowledge
         self.context_summarize = context_summarize
+        self.msg = msg
         
     def chat(self, input):
         """method for use agent"""
