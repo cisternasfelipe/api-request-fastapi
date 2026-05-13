@@ -20,3 +20,4 @@ class Agent():
     def summarise(self, input):
         self.context_summarize = input
         return
+    
