@@ -1,6 +1,11 @@
+# IMPORT ANNOTATIONS FOR TRANSFORM ANNOTATIONS IN STRINGS TO AVOID RECURSION
+from __future__ import annotations
 from agent import Agent
 from worker import Worker
-from planner import Planner
+from typing import TYPE_CHECKING
+# FOR DEFAULT THE VALUE OF TYPE_CHECKING IS False
+if TYPE_CHECKING:
+    from planner import Planner
 
 class Boss(Agent):
     def __init__(self, name, sys_prompt, tools, knowledge, context_summarize, msg, mcps:dict | None, objetive:str | None, employees: dict | Worker, planner: Planner | None):
